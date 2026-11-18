@@ -36,6 +36,8 @@
 #include <assert.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <climits>
+#include <cerrno>
 #if defined (ANDROID_NDK)
 #include <android/log.h>
 #endif
@@ -203,9 +205,21 @@ int ParseLayerConfig (CReadConfig& cRdLayerCfg, const int iLayer, SEncParamExt& 
         sLayerCtx.sSliceArgument.uiSliceNum = atoi (strTag[1].c_str());
       } else if (strTag[0].compare (0, kiSize, str_) == 0) {
         const char* kpString = strTag[0].c_str();
-        int uiSliceIdx = atoi (&kpString[kiSize]);
+        char* endptr = NULL;
+        errno = 0;
+        long temp_val = strtol (&kpString[kiSize], &endptr, 10);
+        if (errno != 0 || endptr == &kpString[kiSize] || temp_val < 0 || temp_val > INT_MAX) {
+          return -1;
+        }
+        int uiSliceIdx = (int)temp_val;
         assert (uiSliceIdx < MAX_SLICES_NUM);
-        sLayerCtx.sSliceArgument.uiSliceMbNum[uiSliceIdx] = atoi (strTag[1].c_str());
+        endptr = NULL;
+        errno = 0;
+        temp_val = strtol (strTag[1].c_str(), &endptr, 10);
+        if (errno != 0 || endptr == strTag[1].c_str() || temp_val < 0 || temp_val > INT_MAX) {
+          return -1;
+        }
+        sLayerCtx.sSliceArgument.uiSliceMbNum[uiSliceIdx] = (int)temp_val;
       }
     }
   }
@@ -234,7 +248,13 @@ int ParseConfig (CReadConfig& cRdCfg, SSourcePicture* pSrcPic, SEncParamExt& pSv
       } else if (strTag[0].compare ("SimulcastAVC") == 0) {
         pSvcParam.bSimulcastAVC = atoi (strTag[1].c_str()) ? true : false;
       } else if (strTag[0].compare ("SourceWidth") == 0) {
-        pSrcPic->iPicWidth = atoi (strTag[1].c_str());
+        char* endptr = NULL;
+        errno = 0;
+        long temp_val = strtol (strTag[1].c_str(), &endptr, 10);
+        if (errno != 0 || endptr == strTag[1].c_str() || temp_val < INT_MIN || temp_val > INT_MAX) {
+          return 1;
+        }
+        pSrcPic->iPicWidth = (int)temp_val;
       } else if (strTag[0].compare ("SourceHeight") == 0) {
         pSrcPic->iPicHeight = atoi (strTag[1].c_str());
       } else if (strTag[0].compare ("InputFile") == 0) {
@@ -465,11 +485,25 @@ int ParseCommandLine (int argc, char** argv, SSourcePicture* pSrcPic, SEncParamE
     else if (!strcmp (pCommand, "-org") && (n < argc))
       sFileSet.strSeqFile.assign (argv[n++]);
 
-    else if (!strcmp (pCommand, "-sw") && (n < argc))//source width
-      pSrcPic->iPicWidth = atoi (argv[n++]);
+    else if (!strcmp (pCommand, "-sw") && (n < argc)) {
+      char* endptr = NULL;
+      errno = 0;
+      long temp_val = strtol (argv[n++], &endptr, 10);
+      if (errno != 0 || endptr == argv[n-1] || temp_val < INT_MIN || temp_val > INT_MAX) {
+        return 1;
+      }
+      pSrcPic->iPicWidth = (int)temp_val;
+    }
 
-    else if (!strcmp (pCommand, "-sh") && (n < argc))//source height
-      pSrcPic->iPicHeight = atoi (argv[n++]);
+    else if (!strcmp (pCommand, "-sh") && (n < argc)) {
+      char* endptr = NULL;
+      errno = 0;
+      long temp_val = strtol (argv[n++], &endptr, 10);
+      if (errno != 0 || endptr == argv[n-1] || temp_val < INT_MIN || temp_val > INT_MAX) {
+        return 1;
+      }
+      pSrcPic->iPicHeight = (int)temp_val;
+    }
 
     else if (!strcmp (pCommand, "-frms") && (n < argc))
       sFileSet.uiFrameToBeCoded = atoi (argv[n++]);
@@ -669,7 +703,13 @@ int ParseCommandLine (int argc, char** argv, SSourcePicture* pSrcPic, SEncParamE
       SSpatialLayerConfig* pDLayer = &pSvcParam.sSpatialLayers[iLayer];
       pDLayer->sSliceArgument.uiSliceNum = atoi (argv[n++]);
     } else if (!strcmp (pCommand, "-slcmbnum") && (n + 1 < argc)) {
-      unsigned int iLayer = atoi (argv[n++]);
+      char* endptr = NULL;
+      errno = 0;
+      long temp_val = strtol (argv[n++], &endptr, 10);
+      if (errno != 0 || endptr == argv[n-1] || temp_val < 0 || temp_val > UINT_MAX) {
+        return 1;
+      }
+      unsigned int iLayer = (unsigned int)temp_val;
       SSpatialLayerConfig* pDLayer = &pSvcParam.sSpatialLayers[iLayer];
       pDLayer->sSliceArgument.uiSliceMbNum[0] = atoi (argv[n++]);
     }
