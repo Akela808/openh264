@@ -59,7 +59,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: msys2/setup-msys2@v2
+      - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
         with:
           msystem: mingw64
           install: >-
@@ -122,12 +122,12 @@ jobs:
     steps:
     - name: Build Fuzzers
       id: build
-      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@74250da3a9247e46e8eed1315947ab10d5151547 # master
       with:
         oss-fuzz-project-name: 'openh264'
         language: c++
     - name: Run Fuzzers
-      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@74250da3a9247e46e8eed1315947ab10d5151547 # master
       with:
         oss-fuzz-project-name: 'openh264'
         language: c++
