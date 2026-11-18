@@ -127,7 +127,11 @@ class DoxyGen2RST(object):
 
     def _build_uml(self, uml_name, content):
         uml_path = os.path.join(self.temp_uml_path, uml_name + ".txt")
-        fuml = open(uml_path, "w+")
+        base_real = os.path.realpath(self.temp_uml_path)
+        target_real = os.path.realpath(uml_path)
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            raise Exception("Invalid file path")
+        fuml = open(target_real, "w+")
         fuml.write("@startuml\n")
         fuml.write(content)
         fuml.write("\n@enduml\n")
